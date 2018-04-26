@@ -704,6 +704,7 @@ def get_children(doctype, parent, company, is_root=False):
 
 			if each.account_currency != company_currency:
 				each["balance_in_account_currency"] = flt(get_balance_on(each.get("value")))
+
 	return acc
 
 def create_payment_gateway_account(gateway):

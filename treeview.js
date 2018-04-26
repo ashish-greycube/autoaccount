@@ -29,6 +29,7 @@ frappe.views.TreeView = Class.extend({
 
 		this.opts = {};
 		this.opts.get_tree_root = true;
+		this.opts.show_expand_all = true;
 		$.extend(this.opts, opts);
 		this.doctype = opts.doctype;
 		this.args = {doctype: me.doctype};
@@ -70,10 +71,11 @@ frappe.views.TreeView = Class.extend({
 			"padding-bottom": "25px"
 		});
 
-		//auto account number
-		this.page.add_inner_button(__('Expand All/Generate Auto Acct'), function() {
-			me.tree.rootnode.load_all();
-		});
+		if(this.opts.show_expand_all) {
+			this.page.add_inner_button(__('Expand All'), function() {
+				me.tree.rootnode.load_all();
+			});
+		}
 
 		if(this.opts.view_template) {
 			var row = $('<div class="row"><div>').appendTo(this.page.main);
@@ -169,12 +171,14 @@ frappe.views.TreeView = Class.extend({
 					return !node.is_root && me.can_read;
 				},
 				click: function(node) {
-					frappe.set_route("Form", me.doctype, node.label);
+					frappe.set_route("Form", me.doctype, encodeURIComponent(node.label));
 				}
 			},
 			{
 				label:__("Add Child"),
-				condition: function(node) { return me.can_create && node.expandable; },
+				condition: function(node) {
+					return me.can_create && node.expandable && !node.hide_add;
+				},
 				click: function(node) {
 					me.new_node();
 				},
@@ -273,24 +277,6 @@ frappe.views.TreeView = Class.extend({
 			});
 		});
 		d.show();
-		d.on_page_show = function(){
-		//auto account number
-		if (me.doctype=='Account') {
-			console.log(me.doctype)
-			frappe.call({
-							method: "erpnext.accounts.utils.get_new_account_number",
-							args: {
-									account_name: node.label,						
-									is_group: d.get_value("is_group")
-								},
-							callback: function(r, rt) {
-								d.set_value("account_number", r.message);
-							}
-						});
-		}
-		//auto account number
-
-		}
 	},
 	prepare_fields: function(){
 		var me = this;
